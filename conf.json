@@ -49,7 +49,17 @@
 			"name": "Telegram",
 			"short_name": "tg_topic",
 			"depends_on": "tg_enable",
-			"elements":[]
+			"elements":[{
+				"name": "Bot API key",
+				"short_name": "api_key",
+				"size": 50,
+				"type": "string"
+			}, {
+				"name": "Chat ID",
+				"short_name": "chat_id",
+				"size": 20,
+				"type": "string"
+			}]
 		},
 		{
 			"name": "Notifications",

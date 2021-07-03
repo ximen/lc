@@ -1,0 +1,7 @@
+sdkconfig
+sdkconfig.old
+sdkconfig.ci
+build/
+.vscode/
+.gdbinit.ci
+config.html

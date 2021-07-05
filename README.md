@@ -9,9 +9,10 @@ Firmware for ESP32-based leakage controller (hw see [here](https://easyeda.com/x
 - Embedded web server for configuration 
 - Internal alarm buzzer
 - Telegram events notification
+- MQTT control
 
 ## TODO
 - Wireless bluetooh/Wifi sensors support
-- Control over CAN bus (HAB protocol) 
-- MQTT control and notification
+- Control and notification over CAN bus (HAB protocol) 
+
 

@@ -94,3 +94,7 @@ void relay_set(uint8_t state){
 bool get_reset(){
     return(gpio_get_level(RESET));
 }
+
+lc_valve_t *get_valve(uint8_t num){
+    return &valves[num];
+}

@@ -45,3 +45,4 @@ void valve_set(lc_valve_t *valve, uint8_t state);
 void buzzer_set(uint8_t state);
 void relay_set(uint8_t state);
 bool get_reset();
+lc_valve_t *get_valve(uint8_t num);

@@ -16,6 +16,7 @@
 #include "board.h"
 #include "esp_http_client.h"
 #include "app_config_mqtt_switch.h"
+#include "app_config_mqtt_binary_sensor.h"
 #include "app_config_wifi.h"
 
 #define TAG "MAIN"
@@ -28,6 +29,7 @@ bool current_alarm = false;
 bool mqtt_enable;
 app_config_mqtt_switch_t *sw1;
 app_config_mqtt_switch_t *sw2;
+app_config_mqtt_binary_t *bs;
 char *avail_topic;
 
 esp_err_t _http_event_handle(esp_http_client_event_t *evt){
@@ -133,6 +135,7 @@ static void gpio_task(void* arg){
             current_alarm = true;
             valves_off();
             if(mqtt_enable){
+                app_config_mqtt_binary_set(1, bs);
                 app_config_mqtt_switch_set(0, sw1);
                 app_config_mqtt_switch_set(0, sw2);
             }
@@ -143,6 +146,7 @@ static void gpio_task(void* arg){
                 current_alarm = false;
                 valves_on();
                 if(mqtt_enable){
+                    app_config_mqtt_binary_set(0, bs);
                     app_config_mqtt_switch_set(1, sw1);
                     app_config_mqtt_switch_set(1, sw2);
                 }
@@ -182,11 +186,15 @@ void mqtt_cb(esp_mqtt_event_handle_t event){
         app_config_getString("valve1_name", &valve1_n);
         char *valve2_n;
         app_config_getString("valve2_name", &valve2_n);
+        char *alarm_n;
+        app_config_getString("alarm_name", &alarm_n);
         ESP_LOGI(TAG, "%s",valve1_n);
-        sw1 = app_config_mqtt_switch_create(valves_prefix, "drive1", valve1_n, switch_handler, true, get_valve(0));
+        sw1 = app_config_mqtt_switch_create(valves_prefix, "drive1", valve1_n, switch_handler, true, true, get_valve(0));
         app_config_mqtt_switch_set(1, sw1);
-        sw2 = app_config_mqtt_switch_create(valves_prefix, "drive2", valve2_n, switch_handler, true, get_valve(1));
+        sw2 = app_config_mqtt_switch_create(valves_prefix, "drive2", valve2_n, switch_handler, true, true, get_valve(1));
         app_config_mqtt_switch_set(1, sw2);
+        bs = app_config_mqtt_binary_create(sensor_prefix, "alarm", alarm_n, true, moisture, true, NULL);
+        app_config_mqtt_binary_set(0, bs);
     } else if(event->event_id == MQTT_EVENT_DISCONNECTED){
         free(avail_topic);
     }

@@ -32,7 +32,7 @@ typedef struct {
 
 #define SENSORS_NUM     6
 #define VALVES_NUM      2
-#define VALVE_TIMEOUT   10000
+#define VALVE_TIMEOUT   18000
 #define BUZZER          GPIO_NUM_27
 #define RELAY           GPIO_NUM_26
 #define RESET           GPIO_NUM_23

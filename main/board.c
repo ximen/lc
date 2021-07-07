@@ -56,7 +56,7 @@ uint8_t get_sensor_state(uint8_t num){
 void valve_set(lc_valve_t *valve, uint8_t state){
     ESP_LOGI(TAG, "Setting state %d to valve", state);
     gpio_set_level(valve->power, 1);
-    gpio_set_level(valve->valve, state);
+    gpio_set_level(valve->valve, !state);
     xTimerStart(valve->timer, 0);
 }
 

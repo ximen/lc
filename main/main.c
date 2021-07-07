@@ -65,17 +65,27 @@ esp_err_t _http_event_handle(esp_http_client_event_t *evt){
 }
 
 void notify_tg(){
-    char tg_url[255] = {0};
+    char *tg_url;
     char *tg_token;
     char *tg_chat;
     char *tg_text = "Attention%21%20Leak%20detected%21%20Water%20supply%20stopped%20until%20manual%20restart%21";
+    char *tg_text2 = "Alarm%20was%20unset.%20Water%20supply%20restored.";
     app_config_getString("api_key", (char **)&tg_token);
     app_config_getString("chat_id", (char **)&tg_chat);
     if(!strlen(tg_token) || !strlen(tg_chat)) {
         ESP_LOGW(TAG, "Telegram data missed");
         return;
     }
-    snprintf(tg_url, sizeof(tg_url), "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s", tg_token, tg_chat, tg_text);
+    int url_len =   strlen("https://api.telegram.org/bot/sendMessage?chat_id=&text=") + 
+                    strlen(tg_token) + 
+                    strlen(tg_chat) + 
+                    (current_alarm ? strlen(tg_text) : strlen(tg_text2)) + 
+                    1;
+    tg_url = (char *)malloc(url_len);
+    snprintf(tg_url, url_len, "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s", 
+                                tg_token, 
+                                tg_chat, 
+                                current_alarm ? tg_text : tg_text2);
     ESP_LOGI(TAG, "TG URL: %s", tg_url);
     esp_http_client_config_t config = {
         .url = tg_url,
@@ -90,6 +100,7 @@ void notify_tg(){
            esp_http_client_get_content_length(client));
     }
     esp_http_client_cleanup(client);
+    free(tg_url);
 }
 
 void notify_alarm(){
@@ -102,24 +113,18 @@ void notify_alarm(){
     app_config_getBool("tg_notify", &tg);
     if(buzzer) buzzer_set(1);
     if(relay) relay_set(1);
-    // TODO: MQTT alarm notification
     // TODO: HAB alarm notification
     if(tg) notify_tg();
 }
 
 void notify_stop(){
     ESP_LOGI(TAG, "Clearing alarm notification");
-    bool buzzer;
-    bool relay;
     bool tg;
-    app_config_getBool("buzzer_notify", &buzzer);
-    app_config_getBool("relay_notify", &relay);
     app_config_getBool("tg_notify", &tg);
-    if(buzzer) buzzer_set(0);
-    if(relay) relay_set(0);
-    // TODO: MQTT alarm notification
+    buzzer_set(0);
+    relay_set(0);
     // TODO: HAB alarm notification
-    // TODO: Telegram alarm notification
+    if(tg) notify_tg();
 }
 
 static void gpio_task(void* arg){
@@ -205,10 +210,8 @@ void app_main(void)
     app_config_cbs_t app_cbs;
     ESP_ERROR_CHECK(app_config_init(&app_cbs));		// Initializing and loading configuration
     board_init();
-    app_config_getBool("mqtt_enable", &mqtt_enable);
-    valves_on();
     xTaskCreate(gpio_task, "gpio_task", 4096, NULL, 10, NULL);
-    ESP_LOGI(TAG, "Started");
+    app_config_getBool("mqtt_enable", &mqtt_enable);    
     if(mqtt_enable){
         app_config_ip_register_cb(IP_EVENT_STA_GOT_IP, ip_cb);
         app_config_mqtt_register_cb(MQTT_EVENT_CONNECTED, mqtt_cb);
